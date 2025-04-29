@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Problemas/Melhorias</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            color: #495057;
+        }
+        .form-container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            padding: 30px;
+        }
+        .form-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 20px;
+        }
+        .form-header h2 {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        .form-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background-color: #f8fafc;
+            border-radius: 8px;
+        }
+        .form-section h5 {
+            color: #3a5169;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        .btn-submit {
+            background-color: #4e73df;
+            border: none;
+            padding: 10px 25px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .btn-submit:hover {
+            background-color: #3a5bd9;
+            transform: translateY(-2px);
+        }
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container form-container">
+        <div class="form-header">
+            <h2>Reporte de Problemas/Melhorias</h2>
+            <p class="text-muted">Ajude-nos a melhorar nossos processos</p>
+        </div>
+
+        <form>
+            <!-- Seção 1: Descrição do problema -->
+            <div class="form-section">
+                <h5>1. Descrição do problema ou melhoria</h5>
+                <div class="mb-3">
+                    <label for="problemDescription" class="form-label">Descreva de forma clara e objetiva:</label>
+                    <textarea class="form-control" id="problemDescription" rows="3" placeholder="Explique o que aconteceu ou o que precisa melhorar"></textarea>
+                </div>
+            </div>
+
+            <!-- Seção 2: Etapa/situação -->
+            <div class="form-section">
+                <h5>2. Em qual etapa ou situação ocorreu?</h5>
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="situation" placeholder="Ex: atendimento inicial, triagem, protocolo, recurso, etc.">
+                </div>
+            </div>
+
+            <!-- Seção 3: Frequência -->
+            <div class="form-section">
+                <h5>3. Frequência do problema</h5>
+                <div class="radio-group">
+                    <div class="form-check radio-option">
+                        <input class="form-check-input" type="radio" name="frequency" id="frequency1" value="once">
+                        <label class="form-check-label" for="frequency1">Aconteceu uma vez só</label>
+                    </div>
+                    <div class="form-check radio-option">
+                        <input class="form-check-input" type="radio" name="frequency" id="frequency2" value="sometimes">
+                        <label class="form-check-label" for="frequency2">Acontece às vezes</label>
+                    </div>
+                    <div class="form-check radio-option">
+                        <input class="form-check-input" type="radio" name="frequency" id="frequency3" value="always">
+                        <label class="form-check-label" for="frequency3">Acontece sempre</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção 4: Impacto -->
+            <div class="form-section">
+                <h5>4. Impacto percebido</h5>
+                <div class="radio-group">
+                    <div class="form-check radio-option">
+                        <input class="form-check-input" type="radio" name="impact" id="impact1" value="low">
+                        <label class="form-check-label" for="impact1">Baixo (não gera grandes prejuízos)</label>
+                    </div>
+                    <div class="form-check radio-option">
+                        <input class="form-check-input" type="radio" name="impact" id="impact2" value="medium">
+                        <label class="form-check-label" for="impact2">Médio (atrapalha o andamento mas é contornável)</label>
+                    </div>
+                    <div class="form-check radio-option">
+                        <input class="form-check-input" type="radio" name="impact" id="impact3" value="high">
+                        <label class="form-check-label" for="impact3">Alto (gera prejuízo sério ou trava o processo)</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção 5: Afetados -->
+            <div class="form-section">
+                <h5>5. Quem foi afetado?</h5>
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="affected" placeholder="Ex: cliente, advogado, operador, estagiário, outro">
+                </div>
+            </div>
+
+            <!-- Seção 6: Prioridade -->
+            <div class="form-section">
+                <h5>6. Prioridade de solução</h5>
+                <div class="radio-group">
+                    <div class="form-check radio-option">
+                        <input class="form-check-input" type="radio" name="priority" id="priority1" value="low">
+                        <label class="form-check-label" for="priority1">Baixa</label>
+                    </div>
+                    <div class="form-check radio-option">
+                        <input class="form-check-input" type="radio" name="priority" id="priority2" value="medium">
+                        <label class="form-check-label" for="priority2">Média</label>
+                    </div>
+                    <div class="form-check radio-option">
+                        <input class="form-check-input" type="radio" name="priority" id="priority3" value="high">
+                        <label class="form-check-label" for="priority3">Alta</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção 7: Causa provável -->
+            <div class="form-section">
+                <h5>7. Causa provável (se souber ou suspeitar)</h5>
+                <div class="mb-3">
+                    <textarea class="form-control" id="probableCause" rows="2" placeholder="Opcional"></textarea>
+                </div>
+            </div>
+
+            <!-- Seção 8: Sugestão de solução -->
+            <div class="form-section">
+                <h5>8. Alguma sugestão de solução?</h5>
+                <div class="mb-3">
+                    <textarea class="form-control" id="solutionSuggestion" rows="2" placeholder="Opcional"></textarea>
+                </div>
+            </div>
+
+            <!-- Seção 9: Evidência -->
+            <div class="form-section">
+                <h5>9. Evidência</h5>
+                <div class="mb-3">
+                    <label for="evidence" class="form-label">Anexar ou descrever onde encontrar o exemplo (print, nome do processo, e-mail, etc.)</label>
+                    <input type="file" class="form-control" id="evidence">
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                <button type="button" class="btn btn-outline-secondary me-md-2">Cancelar</button>
+                <button type="submit" class="btn btn-primary btn-submit">Enviar Reporte</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
