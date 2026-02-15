@@ -74,7 +74,32 @@
             <p class="text-muted">Ajude-nos a melhorar nossos processos</p>
         </div>
 
-        <form>
+        <form id="reportForm">
+            <!-- Seção 0: Identificação do usuário -->
+            <div class="form-section">
+                <h5>0. Identificação do usuário</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="userName" class="form-label">Nome completo:</label>
+                        <input type="text" class="form-control" id="userName" placeholder="Digite seu nome completo">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="userEmail" class="form-label">E-mail:</label>
+                        <input type="email" class="form-control" id="userEmail" placeholder="Digite seu e-mail">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="userDepartment" class="form-label">Departamento/Setor:</label>
+                        <input type="text" class="form-control" id="userDepartment" placeholder="Seu departamento ou setor">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="userContact" class="form-label">Número para contato:</label>
+                        <input type="tel" class="form-control" id="userContact" placeholder="Telefone para contato">
+                    </div>
+                </div>
+            </div>
+
             <!-- Seção 1: Descrição do problema -->
             <div class="form-section">
                 <h5>1. Descrição do problema ou melhoria</h5>
@@ -179,16 +204,262 @@
                 <div class="mb-3">
                     <label for="evidence" class="form-label">Anexar ou descrever onde encontrar o exemplo (print, nome do processo, e-mail, etc.)</label>
                     <input type="file" class="form-control" id="evidence">
+                    <small class="form-text text-muted mt-2">Nota: Arquivos não podem ser enviados diretamente pelo WhatsApp desta forma. Por favor, mencione que enviará separadamente.</small>
                 </div>
             </div>
 
             <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                 <button type="button" class="btn btn-outline-secondary me-md-2">Cancelar</button>
-                <button type="submit" class="btn btn-primary btn-submit">Enviar Reporte</button>
+                <button type="button" id="submitBtn" class="btn btn-primary btn-submit">Enviar Reporte</button>
             </div>
         </form>
     </div>
 
+    <!-- Modal para configurações -->
+    <div class="modal fade" id="configModal" tabindex="-1" aria-labelledby="configModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                    <h5 class="modal-title" id="configModalLabel">Configurações de Envio</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="whatsappNumber" class="form-label">Número de WhatsApp</label>
+                        <input type="text" class="form-control" id="whatsappNumber" value="5582988151076" placeholder="Ex: 5582999999999 (sem espaços ou caracteres especiais)">
+                        <small class="form-text text-muted">Digite apenas números, incluindo o código do país (55) e DDD.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="apiKey" class="form-label">Chave da API OpenAI</label>
+                        <input type="text" class="form-control" id="apiKey" value="" placeholder="Insira sua chave da API">
+                        <small class="form-text text-muted">Sua chave é armazenada localmente apenas durante esta sessão.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveConfig">Salvar e Continuar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de carregamento -->
+    <div class="modal fade" id="loadingModal" tabindex="-1" aria-labelledby="loadingModalLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-4">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                    <h5>Processando seu reporte...</h5>
+                    <p>Estamos resumindo as informações com a ajuda da inteligência artificial.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Configurar API Key padrão
+        // Never hardcode API keys into the client or commit them to git.
+        let apiKey = '';
+        // Configurar número de WhatsApp padrão (formatado para uso na URL)
+        let whatsappNumber = '558298381491';
+        const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+        const configModal = new bootstrap.Modal(document.getElementById('configModal'));
+
+        // Função para limpar número de telefone (remover caracteres não numéricos)
+        function cleanPhoneNumber(number) {
+            return number.replace(/[^0-9]/g, '');
+        }
+
+        // Evento para salvar as configurações
+        document.getElementById('saveConfig').addEventListener('click', function() {
+            let newNumber = document.getElementById('whatsappNumber').value.trim();
+            // Limpar número (remover espaços, traços, parênteses, etc)
+            newNumber = cleanPhoneNumber(newNumber);
+
+            // Verificar se o número tem pelo menos 10 dígitos
+            if (newNumber.length < 10) {
+                alert('Por favor, insira um número de WhatsApp válido.');
+                return;
+            }
+
+            whatsappNumber = newNumber;
+            apiKey = document.getElementById('apiKey').value.trim();
+
+            if (!apiKey) {
+                alert('Por favor, insira uma chave de API válida.');
+                return;
+            }
+
+            configModal.hide();
+            processFormAndSend();
+        });
+
+        // Função para resumir texto usando a API da OpenAI e obter sugestões
+        async function summarizeWithOpenAI(text) {
+            try {
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: "gpt-3.5-turbo",
+                        messages: [
+                            {
+                                role: "system",
+                                content: "Você é um assistente especializado em análise de problemas organizacionais. Seu objetivo é: 1) Resumir o problema de forma concisa e clara; 2) Sugerir possíveis soluções práticas; 3) Recomendar uma abordagem amigável para comunicar o problema e suas soluções. Seu tom deve ser profissional mas empático. Organize sua resposta em três seções claras: 'RESUMO', 'POSSÍVEIS SOLUÇÕES' e 'ABORDAGEM RECOMENDADA'."
+                            },
+                            {
+                                role: "user",
+                                content: `Analise o seguinte relatório de problema/melhoria e me ajude com um resumo, possíveis soluções e uma abordagem amigável para comunicação: ${text}`
+                            }
+                        ],
+                        max_tokens: 800
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || 'Erro ao comunicar com a API da OpenAI');
+                }
+
+                const data = await response.json();
+                return data.choices[0].message.content.trim();
+            } catch (error) {
+                console.error('Erro ao resumir com OpenAI:', error);
+                throw error;
+            }
+        }
+
+        // Função para construir a mensagem completa
+        function buildCompleteMessage() {
+            const userName = document.getElementById('userName').value;
+            const userEmail = document.getElementById('userEmail').value;
+            const userDepartment = document.getElementById('userDepartment').value;
+            const userContact = document.getElementById('userContact').value;
+            const problemDescription = document.getElementById('problemDescription').value;
+            const situation = document.getElementById('situation').value;
+
+            // Capturar valor do radio de frequência
+            let frequency = '';
+            document.getElementsByName('frequency').forEach(radio => {
+                if (radio.checked) frequency = radio.value;
+            });
+
+            // Mapear valor de frequência para texto
+            const frequencyText = {
+                'once': 'Aconteceu uma vez só',
+                'sometimes': 'Acontece às vezes',
+                'always': 'Acontece sempre'
+            }[frequency] || '';
+
+            // Capturar valor do radio de impacto
+            let impact = '';
+            document.getElementsByName('impact').forEach(radio => {
+                if (radio.checked) impact = radio.value;
+            });
+
+            // Mapear valor de impacto para texto
+            const impactText = {
+                'low': 'Baixo (não gera grandes prejuízos)',
+                'medium': 'Médio (atrapalha o andamento mas é contornável)',
+                'high': 'Alto (gera prejuízo sério ou trava o processo)'
+            }[impact] || '';
+
+            const affected = document.getElementById('affected').value;
+
+            // Capturar valor do radio de prioridade
+            let priority = '';
+            document.getElementsByName('priority').forEach(radio => {
+                if (radio.checked) priority = radio.value;
+            });
+
+            // Mapear valor de prioridade para texto
+            const priorityText = {
+                'low': 'Baixa',
+                'medium': 'Média',
+                'high': 'Alta'
+            }[priority] || '';
+
+            const probableCause = document.getElementById('probableCause').value;
+            const solutionSuggestion = document.getElementById('solutionSuggestion').value;
+
+            // Construir a mensagem completa
+            let message = "*Reporte de Problema/Melhoria*\n\n";
+            message += "*Identificação:*\n";
+            message += "Nome: " + (userName || "Não informado") + "\n";
+            message += "E-mail: " + (userEmail || "Não informado") + "\n";
+            message += "Departamento: " + (userDepartment || "Não informado") + "\n";
+            message += "Contato: " + (userContact || "Não informado") + "\n\n";
+            message += "*1. Descrição:* " + problemDescription + "\n\n";
+            message += "*2. Etapa/Situação:* " + situation + "\n\n";
+            message += "*3. Frequência:* " + frequencyText + "\n\n";
+            message += "*4. Impacto:* " + impactText + "\n\n";
+            message += "*5. Afetados:* " + affected + "\n\n";
+            message += "*6. Prioridade:* " + priorityText + "\n\n";
+            message += "*7. Causa provável:* " + (probableCause || "Não informada") + "\n\n";
+            message += "*8. Sugestão de solução:* " + (solutionSuggestion || "Não informada") + "\n\n";
+            message += "*9. Evidência:* Será enviada separadamente se necessário";
+
+            return message;
+        }
+
+        // Função principal para processar o formulário e enviar
+        async function processFormAndSend() {
+            try {
+                loadingModal.show();
+
+                // Constrói a mensagem completa
+                const fullMessage = buildCompleteMessage();
+
+                // Resumir a mensagem e obter sugestões com a API da OpenAI
+                const aiResponse = await summarizeWithOpenAI(fullMessage);
+
+                // Mensagem final com análise da IA e detalhes
+                const finalMessage = "*ANÁLISE DO PROBLEMA PELA IA:*\n\n" +
+                                   aiResponse +
+                                   "\n\n---\n\n*DETALHES COMPLETOS DO REPORTE:*\n\n" +
+                                   fullMessage;
+
+                // Criar URL do WhatsApp com a mensagem
+                const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(finalMessage)}`;
+
+                // Fechar modal de carregamento e abrir WhatsApp
+                loadingModal.hide();
+                window.open(whatsappUrl, '_blank');
+
+            } catch (error) {
+                loadingModal.hide();
+                alert(`Erro ao processar a mensagem: ${error.message}`);
+                console.error(error);
+            }
+        }
+
+        // Evento principal do botão de envio
+        document.getElementById('submitBtn').addEventListener('click', function() {
+            // Validar campos obrigatórios antes de continuar
+            const problemDescription = document.getElementById('problemDescription').value.trim();
+            const userName = document.getElementById('userName').value.trim();
+
+            if (!problemDescription) {
+                alert('Por favor, descreva o problema ou melhoria antes de enviar.');
+                return;
+            }
+
+            if (!userName) {
+                alert('Por favor, informe seu nome para identificação.');
+                return;
+            }
+
+            // Processar diretamente com a chave API já configurada
+            processFormAndSend();
+        });
+    </script>
 </body>
 </html>
